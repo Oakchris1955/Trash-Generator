@@ -2,19 +2,10 @@ use rand::seq::SliceRandom;
 use std::env::args;
 use std::process::exit;
 use std::path::Path;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::prelude::*;
 
-const UNICODE_CHARS: &[char] = &[
-	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'g', 'k', 'l', 'm',
-	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-	'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '!', '@', '#',
-	'$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '\\', '|',
-	']', '[', ';', '\'', ',', '.', '/', '<', '>', '?', ':', '{', '}',
-	'~', '`'
-];
+const CHARS_FILE_NAME: &str = "char.txt";
 
 fn print_help() {
 	println!(concat!(
@@ -28,6 +19,14 @@ fn print_help() {
 fn exit_with_error(err_msg: String) -> ! {
 	eprintln!("{}", err_msg);
 	exit(1);
+}
+
+fn load_chars(filename: &String) -> Option<Vec<char>> {
+	let contents_result = fs::read_to_string(filename);
+	match contents_result {
+		Ok(content) => return Some(content.trim().chars().collect::<Vec<char>>()),
+		Err(_) => return None
+	}
 }
 
 fn write_to_file(filename: &String, output: String) {
@@ -61,9 +60,17 @@ fn main() {
 		exit(1);
 	});
 
+	let unicode_option = load_chars(&CHARS_FILE_NAME.to_string());
+	let unicode_chars = match unicode_option {
+		Some(chars) => chars,
+		None => exit_with_error(format!("Couldn't load character vector from {}", &CHARS_FILE_NAME))
+	};
 	let mut output: Vec<&char> = Vec::new();
+
 	for _ in 0..filesize {
-		output.push(UNICODE_CHARS.choose(&mut rand::thread_rng()).unwrap());
+		output.push(unicode_chars.choose(&mut rand::thread_rng()).unwrap_or_else(|| {
+			exit_with_error(format!("Couldn't choose a random character from `unicode_chars` vector. Maybe \"char.txt\" is empty?"))
+		}));
 	}
 
 	write_to_file(&arguments[2], output.iter().cloned().collect::<String>());

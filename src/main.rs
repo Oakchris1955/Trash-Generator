@@ -25,6 +25,26 @@ fn print_help() {
 	));
 }
 
+fn exit_with_error(err_msg: String) -> ! {
+	eprintln!("{}", err_msg);
+	exit(1);
+}
+
+fn write_to_file(filename: &String, output: String) {
+	let out_path = Path::new(filename);
+	let display = out_path.display();
+
+    let mut file = match File::create(&out_path) {
+        Err(why) => exit_with_error(format!("Couldn't create new file \"{}\": {}", display, why)),
+        Ok(file) => file,
+    };
+
+    match file.write(output.as_bytes()) {
+        Err(why) => exit_with_error(format!("Couldn't write to file \"{}\": {}", display, why)),
+        Ok(_) => println!("Successfully wrote trash to file \"{}\"", display),
+    }
+}
+
 fn main() {
     let arguments: Vec<String> = args().collect();
 	if arguments.len() < 3 {
@@ -40,23 +60,11 @@ fn main() {
 		eprintln!("Error. Expected an integer below 2^64-1 on second argument");
 		exit(1);
 	});
-	let filename = &arguments[2];
 
 	let mut output = String::new();
 	for _ in 0..filesize {
 		output.push_str(UNICODE_CHARS.choose(&mut rand::thread_rng()).unwrap());
 	}
 
-	let out_path = Path::new(filename);
-	let display = out_path.display();
-
-    let mut file = match File::create(&out_path) {
-        Err(why) => panic!("couldn't create {}: {}", display, why),
-        Ok(file) => file,
-    };
-
-    match file.write(output.as_bytes()) {
-        Err(why) => panic!("couldn't write to {}: {}", display, why),
-        Ok(_) => println!("successfully wrote to {}", display),
-    }
+	write_to_file(&arguments[2], output);
 }

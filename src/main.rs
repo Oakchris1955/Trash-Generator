@@ -5,15 +5,15 @@ use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 
-const UNICODE_CHARS: &[&str] = &[
-	"a", "b", "c", "d", "e", "f", "g", "h", "i", "g", "k", "l", "m",
-	"n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-	"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-	"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-	"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "!", "@", "#",
-	"$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=", "\\", "|",
-	"]", "[", ";", "\"", ",", ".", "/", "<", ">", "?", ":", "{", "}",
-	"~", "`"
+const UNICODE_CHARS: &[char] = &[
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'g', 'k', 'l', 'm',
+	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+	'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '!', '@', '#',
+	'$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '\\', '|',
+	']', '[', ';', '\'', ',', '.', '/', '<', '>', '?', ':', '{', '}',
+	'~', '`'
 ];
 
 fn print_help() {
@@ -61,10 +61,10 @@ fn main() {
 		exit(1);
 	});
 
-	let mut output = String::new();
+	let mut output: Vec<&char> = Vec::new();
 	for _ in 0..filesize {
-		output.push_str(UNICODE_CHARS.choose(&mut rand::thread_rng()).unwrap());
+		output.push(UNICODE_CHARS.choose(&mut rand::thread_rng()).unwrap());
 	}
 
-	write_to_file(&arguments[2], output);
+	write_to_file(&arguments[2], output.iter().cloned().collect::<String>());
 }

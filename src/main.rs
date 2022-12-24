@@ -1,20 +1,11 @@
 use rand::seq::SliceRandom;
-use std::env::args;
 use std::process::exit;
 use std::path::Path;
 use std::fs::{self, File};
 use std::io::prelude::*;
+use clap::{arg, Command, value_parser, crate_version, crate_authors};
 
 const CHARS_FILE_NAME: &str = "char.txt";
-
-fn print_help() {
-	println!(concat!(
-		"A Rust program that all it does is generate trash\n",
-		"Usage: main.exe FILESIZE FILENAME\n",
-		"FILESIZE: The size of the trash file in bytes\n",
-		"FILENAME: The path of the output trash file"
-	));
-}
 
 fn exit_with_error(err_msg: String) -> ! {
 	eprintln!("{}", err_msg);
@@ -45,17 +36,15 @@ fn write_to_file(filename: &String, output: String) {
 }
 
 fn main() {
-    let arguments: Vec<String> = args().collect();
-	if arguments.len() < 3 {
-		print_help();
-		eprintln!("\nError. Expected at least 2 items. Exiting...");
-		exit(1);
-	}
-	match arguments.iter().find(|item| item == &&String::from("--help") || item == &&String::from("-h")) {
-		Some(_) => {print_help();exit(0);},
-		None => ()
-	}
-	let filesize: u64 = arguments[1].parse().unwrap_or_else(|_err| {
+	let args = Command::new("MyApp")
+		.version(crate_version!())
+		.author(crate_authors!())
+		.about("Just a Rust program that helps you create files that contain, well, random characters (AKA trash)")
+		.arg(arg!([filename] "The path of the file to write into").required(true))
+		.arg(arg!([filesize] "The number of total characters in the output file").value_parser(value_parser!(u64)).required(true))
+		.get_matches();
+
+	let filesize: &u64 = args.get_one::<u64>("filesize").unwrap_or_else(|| {
 		eprintln!("Error. Expected an integer below 2^64-1 on second argument");
 		exit(1);
 	});
@@ -67,11 +56,16 @@ fn main() {
 	};
 	let mut output: Vec<&char> = Vec::new();
 
-	for _ in 0..filesize {
+	for _ in 0..*filesize {
 		output.push(unicode_chars.choose(&mut rand::thread_rng()).unwrap_or_else(|| {
-			exit_with_error(format!("Couldn't choose a random character from `unicode_chars` vector. Maybe \"char.txt\" is empty?"))
+			exit_with_error(String::from("Couldn't choose a random character from `unicode_chars` vector. Maybe \"char.txt\" is empty?"))
 		}));
 	}
 
-	write_to_file(&arguments[2], output.iter().cloned().collect::<String>());
+	write_to_file(
+		args.get_one("filename").unwrap_or_else(|| {
+			exit_with_error(String::from("Expected a filename as main input argument"))
+		}),
+		output.iter().cloned().collect::<String>()
+	);
 }

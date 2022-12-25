@@ -44,13 +44,11 @@ fn main() {
 		.get_matches();
 
 	let filesize: &u64 = args.get_one::<u64>("filesize").unwrap_or_else(|| {
-		eprintln!("Error. Expected an integer below 2^64-1 on second argument");
-		exit(1);
+		exit_with_error("Error. Expected an integer below 2^64-1 on second argument".to_string());
 	});
 
 	let chars_path: &str = args.get_one::<String>("chars").unwrap_or_else(|| {
-		eprintln!("Couldn't load the path of the file containing the characters to randomly select. Exiting...");
-		exit(1);
+		exit_with_error("Couldn't load the path of the file containing the characters to randomly select. Exiting...".to_string());
 	});
 
 	let unicode_option = load_chars(&chars_path.to_string());
@@ -62,13 +60,13 @@ fn main() {
 
 	for _ in 0..*filesize {
 		output.push(unicode_chars.choose(&mut rand::thread_rng()).unwrap_or_else(|| {
-			exit_with_error(String::from("Couldn't choose a random character from `unicode_chars` vector. Maybe \"char.txt\" is empty?"))
+			exit_with_error("Couldn't choose a random character from `unicode_chars` vector. Maybe \"char.txt\" is empty?".to_string())
 		}));
 	}
 
 	write_to_file(
 		args.get_one("filename").unwrap_or_else(|| {
-			exit_with_error(String::from("Expected a filename as main input argument"))
+			exit_with_error("Expected a filename as main input argument".to_string())
 		}),
 		output.iter().cloned().collect::<String>()
 	);

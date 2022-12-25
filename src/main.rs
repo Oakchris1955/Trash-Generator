@@ -5,8 +5,6 @@ use std::fs::{self, File};
 use std::io::prelude::*;
 use clap::{arg, Command, value_parser, crate_version, crate_authors};
 
-const CHARS_FILE_NAME: &str = "char.txt";
-
 fn exit_with_error(err_msg: String) -> ! {
 	eprintln!("{}", err_msg);
 	exit(1);
@@ -42,6 +40,7 @@ fn main() {
 		.about("Just a Rust program that helps you create files that contain, well, random characters (AKA trash)")
 		.arg(arg!([filename] "The path of the file to write into").required(true))
 		.arg(arg!([filesize] "The number of total characters in the output file").value_parser(value_parser!(u64)).required(true))
+		.arg(arg!(-c --chars <chars_path> "The path of the file containing the characters to be randomly selected (defaults to \"char.txt\")").default_value("char.txt").required(false))
 		.get_matches();
 
 	let filesize: &u64 = args.get_one::<u64>("filesize").unwrap_or_else(|| {
@@ -49,10 +48,15 @@ fn main() {
 		exit(1);
 	});
 
-	let unicode_option = load_chars(&CHARS_FILE_NAME.to_string());
+	let chars_path: &str = args.get_one::<String>("chars").unwrap_or_else(|| {
+		eprintln!("Couldn't load the path of the file containing the characters to randomly select. Exiting...");
+		exit(1);
+	});
+
+	let unicode_option = load_chars(&chars_path.to_string());
 	let unicode_chars = match unicode_option {
 		Some(chars) => chars,
-		None => exit_with_error(format!("Couldn't load character vector from {}", &CHARS_FILE_NAME))
+		None => exit_with_error(format!("Couldn't load character vector from \"{}\"", &chars_path))
 	};
 	let mut output: Vec<&char> = Vec::new();
 
